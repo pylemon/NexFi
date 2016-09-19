@@ -1,0 +1,1 @@
+cmd_/home/liwei/work/tiansu/tools/batman-adv-2016.1/net/batman-adv/batman-adv.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/liwei/work/tiansu/tools/batman-adv-2016.1/net/batman-adv/batman-adv.ko /home/liwei/work/tiansu/tools/batman-adv-2016.1/net/batman-adv/batman-adv.o /home/liwei/work/tiansu/tools/batman-adv-2016.1/net/batman-adv/batman-adv.mod.o
