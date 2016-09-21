@@ -1,18 +1,18 @@
 package main
 
 import (
-	"net/http"
-	"log"
-	"os"
-	"sync"
-	"flag"
-	"time"
-	"io/ioutil"
 	"encoding/json"
-	"syscall"
-	"runtime/debug"
-	"runtime"
+	"flag"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
 	"os/signal"
+	"runtime"
+	"runtime/debug"
+	"sync"
+	"syscall"
+	"time"
 )
 
 // 全局配置结构
@@ -20,22 +20,22 @@ type GlobalConfig struct {
 	LogFile       string `json:"log_file"`
 	ListenAddress string `json:"listen_address"`
 	ConfigFile    string `json:"config"`
-	LogToStdout   bool `json:"log_to_stdout"`
+	LogToStdout   bool   `json:"log_to_stdout"`
 
-	Lock          *sync.Mutex
+	Lock *sync.Mutex
 }
 
 // 全局变量
 var (
 	// 全局的logger 在配置初始化前需要使用 log
-	logger      *log.Logger
+	logger *log.Logger
 	// 处理信号的channel
 	signal_chan chan os.Signal
 
-	LogFile = flag.String("log_file", "", "logging file, default: server.log")
+	LogFile       = flag.String("log_file", "", "logging file, default: server.log")
 	ListenAddress = flag.String("listen_address", "", "server listen on, default: 0.0.0.0:8888")
-	ConfigFile = flag.String("config", "./config.json", "")
-	LogToStdout = flag.Bool("log_to_stdout", false, "Log to standard output (true or false).")
+	ConfigFile    = flag.String("config", "./config.json", "")
+	LogToStdout   = flag.Bool("log_to_stdout", false, "Log to standard output (true or false).")
 
 	Config GlobalConfig
 )
@@ -85,7 +85,7 @@ func init() {
 
 	// 初始化日志
 	if !(Config.LogToStdout) {
-		log_file, err = os.OpenFile(Config.LogFile, os.O_RDWR | os.O_APPEND | os.O_CREATE, 0666)
+		log_file, err = os.OpenFile(Config.LogFile, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 		if err != nil {
 			log.Println(err)
 			os.Exit(1)
@@ -93,7 +93,7 @@ func init() {
 	} else {
 		log_file = os.Stdout
 	}
-	logger = log.New(log_file, "", log.Ldate | log.Ltime | log.Lshortfile)
+	logger = log.New(log_file, "", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 // 信号回调
