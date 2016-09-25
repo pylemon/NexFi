@@ -88,7 +88,7 @@ var data = {
 //  ]
 //};
 
-var WIDTH = 1000;
+var WIDTH = 1800;
 var HEIGHT = 600;
 
 var positionGenerator = function () {

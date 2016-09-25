@@ -8,8 +8,9 @@ import (
 	"runtime/debug"
 )
 
-func topoHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Println("GET /topo/ topoHandler")
+// 渲染首页模板
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Println("GET / homeHandler")
 	t, err := template.ParseFiles("template/html/topo.html")
 	if err != nil {
 		logger.Println(err)
@@ -64,7 +65,8 @@ func init() {
 
 	http.Handle("/css/", http.FileServer(http.Dir("template")))
 	http.Handle("/js/", http.FileServer(http.Dir("template")))
-	http.HandleFunc("/", auth.Wrap(topoHandler))
+
+	http.HandleFunc("/", auth.Wrap(homeHandler))
 	http.HandleFunc("/topo/vis", auth.Wrap(topoVisHandler))
 	http.HandleFunc("/example", auth.Wrap(exampleAjaxHandler))
 }
