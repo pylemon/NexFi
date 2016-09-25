@@ -60,10 +60,11 @@ func exampleAjaxHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
+	auth := NewBasicAuth(Config.Username, Config.Password)
+
 	http.Handle("/css/", http.FileServer(http.Dir("template")))
 	http.Handle("/js/", http.FileServer(http.Dir("template")))
-
-	http.HandleFunc("/topo/", topoHandler)
-	http.HandleFunc("/topo/vis", topoVisHandler)
-	http.HandleFunc("/example", exampleAjaxHandler)
+	http.HandleFunc("/", auth.Wrap(topoHandler))
+	http.HandleFunc("/topo/vis", auth.Wrap(topoVisHandler))
+	http.HandleFunc("/example", auth.Wrap(exampleAjaxHandler))
 }

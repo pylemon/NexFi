@@ -21,6 +21,8 @@ type GlobalConfig struct {
 	ListenAddress string `json:"listen_address"`
 	ConfigFile    string `json:"config"`
 	LogToStdout   bool   `json:"log_to_stdout"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
 
 	Lock *sync.Mutex
 }
@@ -36,6 +38,8 @@ var (
 	ListenAddress = flag.String("listen_address", "", "server listen on, default: 0.0.0.0:8888")
 	ConfigFile    = flag.String("config", "./config.json", "")
 	LogToStdout   = flag.Bool("log_to_stdout", false, "Log to standard output (true or false).")
+	Username = flag.String("username", "admin", "login username, default: admin")
+	Password = flag.String("password", "admin", "login password, default: admin")
 
 	Config GlobalConfig
 )
@@ -55,10 +59,18 @@ func init() {
 		if *ListenAddress == "" {
 			*ListenAddress = "0.0.0.0:8888"
 		}
+		if *Username == "" {
+			*Username = "admin"
+		}
+		if *Password == "" {
+			*Password = "admin"
+		}
 
 		Config.LogFile = *LogFile
 		Config.ListenAddress = *ListenAddress
 		Config.LogToStdout = *LogToStdout
+		Config.Username = *Username
+		Config.Password = *Password
 	} else {
 		data, err := ioutil.ReadFile(*ConfigFile)
 		if err != nil {
@@ -80,6 +92,12 @@ func init() {
 		}
 		if *LogToStdout {
 			Config.LogToStdout = *LogToStdout
+		}
+		if *Username != "" {
+			Config.Username = *Username
+		}
+		if *Password != "" {
+			Config.Password = *Password
 		}
 	}
 
