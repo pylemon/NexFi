@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"log"
 	"os"
 	"os/exec"
 )
@@ -17,6 +16,6 @@ func System(s string, output *bytes.Buffer) {
 	cmd.Stdout = output
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		logger.Println("[System] command failed:", err)
 	}
 }

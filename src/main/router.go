@@ -29,7 +29,9 @@ func topoVisHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	var out bytes.Buffer
-	System("ls", &out)
+	logger.Println("[vis] cmd:", Config.VisCommand)
+	System(Config.VisCommand, &out)
+	logger.Println("[vis] response:", out.String())
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out.Bytes())
 }

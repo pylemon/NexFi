@@ -1,5 +1,8 @@
 {
     "log_file": "./server.log",
     "listen_address": "0.0.0.0:8888",
+    "username": "admin",
+    "password": "admin",
+    "vis_command": "PATH=/home/liwei/tools fake-vis -f jsondoc",
     "log_to_stdout": true
 }

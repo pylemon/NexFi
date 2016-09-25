@@ -23,8 +23,9 @@ type GlobalConfig struct {
 	LogToStdout   bool   `json:"log_to_stdout"`
 	Username      string `json:"username"`
 	Password      string `json:"password"`
+	VisCommand    string `json:"vis_command"`
 
-	Lock *sync.Mutex
+	Lock          *sync.Mutex
 }
 
 // 全局变量
@@ -38,6 +39,7 @@ var (
 	ListenAddress = flag.String("listen_address", "", "server listen on, default: 0.0.0.0:8888")
 	ConfigFile    = flag.String("config", "./config.json", "")
 	LogToStdout   = flag.Bool("log_to_stdout", false, "Log to standard output (true or false).")
+	VisCommand = flag.String("vis_command", "batadv-vis -f jsondoc", "command to generate vis output, default: batadv-vis -f jsondoc")
 	Username = flag.String("username", "admin", "login username, default: admin")
 	Password = flag.String("password", "admin", "login password, default: admin")
 
@@ -52,25 +54,29 @@ func init() {
 	Config.Lock = new(sync.Mutex)
 	flag.Parse()
 
-	if !Exist(*ConfigFile) {
-		if *LogFile == "" {
-			*LogFile = "./server.log"
-		}
-		if *ListenAddress == "" {
-			*ListenAddress = "0.0.0.0:8888"
-		}
-		if *Username == "" {
-			*Username = "admin"
-		}
-		if *Password == "" {
-			*Password = "admin"
-		}
+	if *LogFile == "" {
+		*LogFile = "./server.log"
+	}
+	if *ListenAddress == "" {
+		*ListenAddress = "0.0.0.0:8888"
+	}
+	if *Username == "" {
+		*Username = "admin"
+	}
+	if *Password == "" {
+		*Password = "admin"
+	}
+	if *VisCommand == "" {
+		*VisCommand = "batadv-vis -f jsondoc"
+	}
 
+	if !Exist(*ConfigFile) {
 		Config.LogFile = *LogFile
 		Config.ListenAddress = *ListenAddress
 		Config.LogToStdout = *LogToStdout
 		Config.Username = *Username
 		Config.Password = *Password
+		Config.VisCommand = *VisCommand
 	} else {
 		data, err := ioutil.ReadFile(*ConfigFile)
 		if err != nil {
@@ -82,23 +88,6 @@ func init() {
 			log.Println(err)
 		}
 		log.Printf("Load config from: %s\n%s", *ConfigFile, data)
-
-		// 参数优先级高于配置文件
-		if *LogFile != "" {
-			Config.LogFile = *LogFile
-		}
-		if *ListenAddress != "" {
-			Config.ListenAddress = *ListenAddress
-		}
-		if *LogToStdout {
-			Config.LogToStdout = *LogToStdout
-		}
-		if *Username != "" {
-			Config.Username = *Username
-		}
-		if *Password != "" {
-			Config.Password = *Password
-		}
 	}
 
 	// 初始化日志
@@ -144,7 +133,6 @@ func main() {
 		syscall.SIGQUIT,
 		syscall.SIGPIPE,
 		syscall.SIGALRM,
-		syscall.SIGPIPE,
 		syscall.SIGBUS,
 		syscall.SIGCHLD,
 		syscall.SIGCONT,
