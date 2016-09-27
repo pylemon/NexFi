@@ -166,8 +166,39 @@ var getVisJSON = function () {
     )
 };
 
+var saveVisPosition = function () {
+    var data = graph.toJSON();
+    var nodes = [];
+    for (var i = 0; i < data.cells.length; i++) {
+        var cell = data.cells[i];
+        if (cell.type == "basic.Rect") {
+            nodes.push({
+                "name": cell.attrs.text.text,
+                "position": cell.position
+            })
+        }
+    }
+
+    console.log(nodes);
+
+    $.post(
+        '/topo/position',
+        JSON.stringify({
+            nodes: nodes
+        }),
+        function (jsonData) {
+            if (jsonData.status == 'ok') {
+                alert('保存成功')
+            } else {
+                alert('保存失败')
+            }
+        }
+    )
+};
+
 // 绑定刷新按钮
 $('#vis-refresh').on('click', getVisJSON);
+$('#vis-save').on('click', saveVisPosition);
 
 // 初始化页面
 getVisJSON();

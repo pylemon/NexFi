@@ -36,22 +36,42 @@ func topoVisHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(out.Bytes())
 }
 
-// 一个ajax请求的例子
-type BaseResponse struct {
-	Result int    `json:"result"`
-	Data   string `json:"data"`
+type Position struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+type Node struct {
+	Name     string   `json:"name"`
+	Position Position `json:"position"`
 }
 
-func exampleAjaxHandler(w http.ResponseWriter, r *http.Request) {
+type VisPosition struct {
+	Nodes []Node  `json:"nodes"`
+}
+
+type Response struct {
+	Status string `json:"status"`
+}
+
+func topoPositionHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Println("GET /topo/position topoPositionHandler")
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Println(err)
 			debug.PrintStack()
 		}
 	}()
+	var dt VisPosition
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&dt)
+	if err != nil {
+		logger.Println(err)
+	}
 
-	var baseResp BaseResponse
-	buf, err := json.Marshal(baseResp)
+	logger.Println(dt)
+
+	resp := Response{"ok"}
+	buf, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, "Marshal JSON failed", 500)
 		return
@@ -59,8 +79,9 @@ func exampleAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(buf)
-
 }
+
+// 一个ajax请求的例子
 
 func init() {
 	auth := NewBasicAuth(Config.Username, Config.Password)
@@ -70,5 +91,5 @@ func init() {
 
 	http.HandleFunc("/", auth.Wrap(homeHandler))
 	http.HandleFunc("/topo/vis", auth.Wrap(topoVisHandler))
-	http.HandleFunc("/example", auth.Wrap(exampleAjaxHandler))
+	http.HandleFunc("/topo/position", auth.Wrap(topoPositionHandler))
 }
