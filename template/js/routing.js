@@ -1,93 +1,3 @@
-var data = {
-  "source_version" : "2014.4.0",
-  "algorithm" : 4,
-  "vis" : [
-    { "primary" : "0e:03:01:00:10:14",
-      "neighbors" : [
-         { "router" : "0e:03:01:00:10:14",
-           "neighbor" : "0e:03:01:00:10:0a",
-           "metric" : "1.016" },
-         { "router" : "0e:03:01:00:10:14",
-           "neighbor" : "0e:03:01:00:10:1d",
-           "metric" : "1.032" }
-      ],
-      "clients" : [
-        "9a:10:83:ec:19:2b",
-        "33:33:00:00:00:02",
-        "01:00:5e:00:00:01",
-        "33:33:ff:00:00:00",
-        "33:33:00:01:00:02",
-        "33:33:00:01:00:03",
-        "3e:03:01:00:10:14",
-        "33:33:ff:00:10:14",
-        "9a:10:83:ec:19:2b",
-        "33:33:00:00:00:01"
-      ]
-    },
-    { "primary" : "0e:03:01:00:10:0a",
-      "neighbors" : [
-         { "router" : "0e:03:01:00:10:0a",
-           "neighbor" : "0e:03:01:00:10:14",
-           "metric" : "1.028" },
-         { "router" : "0e:03:01:00:10:0a",
-           "neighbor" : "0e:03:01:00:10:1d",
-           "metric" : "1.032" }
-      ],
-      "clients" : [
-        "33:33:00:00:00:02",
-        "3a:ea:b0:6a:9e:e7",
-        "33:33:ff:00:10:0a",
-        "01:00:5e:00:00:01",
-        "33:33:ff:00:00:00",
-        "3e:03:01:00:10:0a",
-        "33:33:00:01:00:02",
-        "33:33:00:01:00:03",
-        "3a:ea:b0:6a:9e:e7",
-        "33:33:00:00:00:01"
-      ]
-    },
-    { "primary" : "0e:03:01:00:10:1d",
-      "neighbors" : [
-         { "router" : "0e:03:01:00:10:1d",
-           "neighbor" : "0e:03:01:00:10:0a",
-           "metric" : "1.000" },
-         { "router" : "0e:03:01:00:10:1d",
-           "neighbor" : "0e:03:01:00:10:14",
-           "metric" : "1.028" }
-      ],
-      "clients" : [
-        "33:33:00:00:00:02",
-        "01:00:5e:00:00:01",
-        "33:33:ff:00:00:00",
-        "33:33:ff:00:10:1d",
-        "33:33:00:01:00:02",
-        "33:33:00:01:00:03",
-        "06:8e:64:eb:a1:d6",
-        "06:8e:64:eb:a1:d6",
-        "3e:03:01:00:10:1d",
-        "33:33:00:00:00:01"
-      ]
-    }
-  ]
-}
-
-//var data = {
-//  "vis": [
-//    {
-//      "primary" : "0e:03:01:00:10:14",
-//      "neighbors" : [
-//        { "router" : "0e:03:01:00:10:14",
-//          "neighbor" : "0e:03:01:00:10:0a",
-//          "metric" : "1.028" }
-//      ]
-//    },
-//    {
-//      "primary" : "0e:03:01:00:10:0a",
-//      "neighbors" : []
-//    }
-//  ]
-//};
-
 var WIDTH = 1800;
 var HEIGHT = 600;
 
@@ -124,7 +34,7 @@ var paper = new joint.dia.Paper({
 var allNodes = [];
 var newNode = function (name, px, py) {
     // 已存在的节点
-    for (i = 0; i < allNodes.length; i ++ ) {
+    for (var i = 0; i < allNodes.length; i++) {
         if (allNodes[i].name == name) {
              return graph.getCell(allNodes[i].id)
         }
@@ -155,9 +65,9 @@ var newNode = function (name, px, py) {
         }
     });
     graph.addCell(node);
-    allNodes.push({name: name, id: node.id})
+    allNodes.push({name: name, id: node.id});
     return node;
-}
+};
 
 var newRoute = function(node1, node2, label) {
     var link = new joint.dia.Link({
@@ -212,43 +122,52 @@ var newRoute = function(node1, node2, label) {
     graph.addCell(link);
     link.toBack();
     return link
-}
+};
 
 
 // 解析原始JSON数据，返回全部需要绘制的节点列表
-var getNodesFromJson = function (jsonData) {
+var drawNodesByJson = function (jsonData) {
     var getPos = positionGenerator();
-    nodes = {};
+    var nodes = {};
+    var visDt, i, k, pos, node, neighbor;
 
     // 绘制 primary 节点 和 neighbors 节点
-    for (i = 0; i < data.vis.length; i++) {
-        var visDt = data.vis[i];
-        var pos = getPos();
-        var node = newNode(visDt.primary, pos.x, pos.y);
+    for (i = 0; i < jsonData.vis.length; i++) {
+        visDt = jsonData.vis[i];
+        pos = getPos();
+        node = newNode(visDt.primary, pos.x, pos.y);
         nodes[visDt.primary] = node;
         for (k = 0; k < visDt.neighbors.length; k++) {
-            var neighbor = visDt.neighbors[k];
-            var pos = getPos();
-            var node = newNode(neighbor.neighbor, pos.x, pos.y);
+            neighbor = visDt.neighbors[k];
+            pos = getPos();
+            node = newNode(neighbor.neighbor, pos.x, pos.y);
             nodes[neighbor.neighbor] = node;
         }
     }
 
-//    console.log(nodes)
-
     // 绘制路由
-    for (i = 0; i < data.vis.length; i++) {
-        var visDt = data.vis[i];
+    for (i = 0; i < jsonData.vis.length; i++) {
+        visDt = jsonData.vis[i];
         for (k = 0; k < visDt.neighbors.length; k++) {
-            var neighbor = visDt.neighbors[k];
+            neighbor = visDt.neighbors[k];
             newRoute(nodes[neighbor.router], nodes[neighbor.neighbor], neighbor.metric);
         }
     }
-}()
+};
 
+var getVisJSON = function () {
+    $.get(
+        '/topo/vis',
+        function (jsonData) {
+            graph.clear();
+            allNodes = [];
+            drawNodesByJson(jsonData);
+        }
+    )
+};
 
-graph.on('change:position', function(cell) {
-    // has an obstacle been moved? Then reroute the link.
-    //    if (_.contains(obstacles, cell)) paper.findViewByModel(link).update();
-});
+// 绑定刷新按钮
+$('#vis-refresh').on('click', getVisJSON);
 
+// 初始化页面
+getVisJSON();
