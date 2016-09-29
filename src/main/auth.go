@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/base64"
 	"net/http"
 	"strings"
-	"encoding/base64"
 )
 
 type BasicAuth struct {

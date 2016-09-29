@@ -46,42 +46,67 @@ type Node struct {
 }
 
 type VisPosition struct {
-	Nodes []Node  `json:"nodes"`
+	Nodes []Node `json:"nodes"`
 }
 
 type Response struct {
 	Status string `json:"status"`
 }
 
+func getDatabase(name string) *DB {
+	db := NewDB(
+		"ts",
+		func() interface{} {
+			var vis VisPosition
+			return &vis
+		})
+	db.Init()
+	return db
+}
+
 func topoPositionHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Println("GET /topo/position topoPositionHandler")
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Println(err)
 			debug.PrintStack()
 		}
 	}()
-	var dt VisPosition
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&dt)
-	if err != nil {
-		logger.Println(err)
+
+	if r.Method == "POST" {
+		logger.Println("POST /topo/position topoPositionHandler")
+		var dt VisPosition
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&dt)
+		if err != nil {
+			logger.Println(err)
+		}
+		db := getDatabase("position")
+		db.Update("position", dt)
+
+		resp := Response{"ok"}
+		buf, err := json.Marshal(resp)
+		if err != nil {
+			http.Error(w, "Marshal JSON failed", 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(buf)
+	} else {
+		logger.Println("GET /topo/position topoPositionHandler")
+		db := getDatabase("position")
+		value := db.Get("position")
+
+		logger.Println("value:", value)
+
+		buf, err := json.Marshal(value)
+		if err != nil {
+			http.Error(w, "Marshal JSON failed", 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(buf)
 	}
-
-	logger.Println(dt)
-
-	resp := Response{"ok"}
-	buf, err := json.Marshal(resp)
-	if err != nil {
-		http.Error(w, "Marshal JSON failed", 500)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(buf)
 }
-
-// 一个ajax请求的例子
 
 func init() {
 	auth := NewBasicAuth(Config.Username, Config.Password)

@@ -25,7 +25,7 @@ type GlobalConfig struct {
 	Password      string `json:"password"`
 	VisCommand    string `json:"vis_command"`
 
-	Lock          *sync.Mutex
+	Lock *sync.Mutex
 }
 
 // 全局变量
@@ -39,9 +39,9 @@ var (
 	ListenAddress = flag.String("listen_address", "", "server listen on, default: 0.0.0.0:8888")
 	ConfigFile    = flag.String("config", "./config.json", "")
 	LogToStdout   = flag.Bool("log_to_stdout", false, "Log to standard output (true or false).")
-	VisCommand = flag.String("vis_command", "batadv-vis -f jsondoc", "command to generate vis output, default: batadv-vis -f jsondoc")
-	Username = flag.String("username", "admin", "login username, default: admin")
-	Password = flag.String("password", "admin", "login password, default: admin")
+	VisCommand    = flag.String("vis_command", "batadv-vis -f jsondoc", "command to generate vis output, default: batadv-vis -f jsondoc")
+	Username      = flag.String("username", "admin", "login username, default: admin")
+	Password      = flag.String("password", "admin", "login password, default: admin")
 
 	Config GlobalConfig
 )

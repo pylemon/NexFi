@@ -125,8 +125,20 @@ var newRoute = function(node1, node2, label) {
 };
 
 
+// 找mac对应的存储下来的position
+var getSavedPosition = function (macAddr, posData) {
+    for (var i = 0; i < posData.nodes.length; i++) {
+        var name = posData.nodes[i].name;
+        var pos = posData.nodes[i].position;
+        if (macAddr == name) {
+            return pos
+        }
+    }
+    return null
+};
+
 // 解析原始JSON数据，返回全部需要绘制的节点列表
-var drawNodesByJson = function (jsonData) {
+var drawNodesByJson = function (jsonData, posData) {
     var getPos = positionGenerator();
     var nodes = {};
     var visDt, i, k, pos, node, neighbor;
@@ -134,12 +146,18 @@ var drawNodesByJson = function (jsonData) {
     // 绘制 primary 节点 和 neighbors 节点
     for (i = 0; i < jsonData.vis.length; i++) {
         visDt = jsonData.vis[i];
-        pos = getPos();
+        pos = getSavedPosition(visDt.primary, posData);
+        if (!pos) {
+            pos = getPos();
+        }
         node = newNode(visDt.primary, pos.x, pos.y);
         nodes[visDt.primary] = node;
         for (k = 0; k < visDt.neighbors.length; k++) {
             neighbor = visDt.neighbors[k];
-            pos = getPos();
+            pos = getSavedPosition(neighbor.neighbor, posData);
+            if (!pos) {
+                pos = getPos();
+            }
             node = newNode(neighbor.neighbor, pos.x, pos.y);
             nodes[neighbor.neighbor] = node;
         }
@@ -159,9 +177,11 @@ var getVisJSON = function () {
     $.get(
         '/topo/vis',
         function (jsonData) {
-            graph.clear();
-            allNodes = [];
-            drawNodesByJson(jsonData);
+            $.get('/topo/position', function (posData) {
+                graph.clear();
+                allNodes = [];
+                drawNodesByJson(jsonData, posData);
+            })
         }
     )
 };
@@ -179,8 +199,6 @@ var saveVisPosition = function () {
         }
     }
 
-    console.log(nodes);
-
     $.post(
         '/topo/position',
         JSON.stringify({
@@ -188,9 +206,9 @@ var saveVisPosition = function () {
         }),
         function (jsonData) {
             if (jsonData.status == 'ok') {
-                alert('保存成功')
+                bootbox.alert('保存成功')
             } else {
-                alert('保存失败')
+                bootbox.alert('保存失败')
             }
         }
     )
