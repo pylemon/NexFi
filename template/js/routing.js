@@ -233,3 +233,61 @@ $('#vis-save').on('click', saveVisPosition);
 
 // 初始化页面
 getVisJSON();
+
+paper.on('cell:pointerdblclick', function (cell) {
+    console.log("dblclick on cell id:", cell.model.id);
+    if (!cell.model.attributes.attrs.text) return;
+    var macAddr = cell.model.attributes.attrs.text.text;
+
+    console.log("show dialog for: ", macAddr);
+    // bootbox.alert(macAddr);
+    detailDialog(macAddr);
+});
+
+var detailDialog = function (macAddr) {
+    // todo: 获取数据
+
+    bootbox.dialog({
+        title: "查看详情",
+        message: $('#detailModal').clone().show(),
+        className: "my-detail",
+        buttons: {
+            success: {
+                label: "编辑",
+                className: "btn-success",
+                callback: function () {
+                    editDialog(macAddr);
+                }
+            },
+            cancel: {
+                label: "取消",
+                className: "btn-sm btn-danger",
+                callback: function () {
+                }
+            }
+        }
+    })
+};
+
+var editDialog = function (macAddr) {
+    bootbox.dialog({
+        title: "编辑",
+        message: $('#editModal').clone().show(),
+        className: "my-detail",
+        buttons: {
+            success: {
+                label: "编辑",
+                className: "btn-success",
+                callback: function () {
+                    editDialog(macAddr);
+                }
+            },
+            cancel: {
+                label: "取消",
+                className: "btn-sm btn-danger",
+                callback: function () {
+                }
+            }
+        }
+    })
+};
