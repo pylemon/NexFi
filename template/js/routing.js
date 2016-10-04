@@ -74,16 +74,17 @@ var newRoute = function(node1, node2, label) {
         source: { id: node1.id },
         target: { id: node2.id },
         router: function(vertices, args, linkView) {
-            if (linkView.sourcePoint && linkView.targetPoint) {
-                var x1 = linkView.sourcePoint.x;
-                var y1 = linkView.sourcePoint.y;
-                var x2 = linkView.targetPoint.x;
-                var y2 = linkView.targetPoint.y;
+            if (linkView.sourceBBox && linkView.targetBBox) {
+                var x1 = linkView.sourceBBox.x + linkView.sourceBBox.width / 2;
+                var y1 = linkView.sourceBBox.y + linkView.sourceBBox.height / 2;
+                var x2 = linkView.targetBBox.x + linkView.sourceBBox.width / 2;
+                var y2 = linkView.targetBBox.y + linkView.sourceBBox.height / 2;
                 var middlePoint = {
                     x: ((x1 + x2) / 2),
                     y: ((y1 + y2) / 2)
-                }
-                var offset = 8;
+                };
+                // console.log("source:", linkView.sourceBBox, "target:", linkView.targetBBox, "middle:", middlePoint);
+                var offset = 13;
                 if (x1 > x2 && y1 < y2) {
                     middlePoint.x += offset;
                     middlePoint.y += offset;
@@ -93,11 +94,20 @@ var newRoute = function(node1, node2, label) {
                 } else if (x1 < x2 && y1 < y2) {
                     middlePoint.x += offset;
                     middlePoint.y -= offset;
-                } else if (x1 <= x2 && y1 >= y2) {
+                } else if (x1 < x2 && y1 > y2) {
                     middlePoint.x -= offset;
                     middlePoint.y -= offset;
+                } else if (x1 == x2 && y1 > y2) {
+                    middlePoint.x -= offset;
+                } else if (x1 == x2 && y1 < y2) {
+                    middlePoint.x += offset;
+                } else if (x1 < x2 && y1 == y2) {
+                    middlePoint.y -= offset;
+                } else if (x1 > x2 && y1 == y2) {
+                    middlePoint.y += offset;
                 }
-                vertices.push(middlePoint)
+                // console.log("result: ", middlePoint);
+                vertices.push(middlePoint);
             }
             return vertices
         },
