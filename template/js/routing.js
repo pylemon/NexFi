@@ -28,7 +28,10 @@ var paper = new joint.dia.Paper({
     width: WIDTH,
     height: HEIGHT,
     gridSize: 10,
-    model: graph
+    model: graph,
+    interactive: function(cellView) {
+        return !(cellView.model instanceof joint.dia.Link);
+    }
 });
 
 var allNodes = [];
