@@ -214,7 +214,7 @@ var saveVisPosition = function () {
         var cell = data.cells[i];
         if (cell.type == "basic.Rect") {
             nodes.push({
-                "name": cell.attrs.text.text,
+                "name": cell.attrs.text.mac_addr,
                 "position": cell.position
             })
         }
