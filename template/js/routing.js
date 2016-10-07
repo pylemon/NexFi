@@ -260,7 +260,7 @@ var menuDialog = function (macAddr, ipAddr) {
             <div class="control-group">\
                 <button class="btn btn-large btn-success btn-block" style="margin-top: 20px;" onclick="detailDialog(\'${macAddr}\');return false;">查看节点详情</button>\
                 <button class="btn btn-large btn-warning btn-block" style="margin-top: 20px;" onclick="detailNetwork(\'${ipAddr}\');return false;">有线网络详情</button>\
-                <button class="btn btn-large btn-primary btn-block" style="margin-top: 20px;" onclick="detailWireless(\'${ipAddr}\');return false;">无线参数配置</button>\
+                <button class="btn btn-large btn-primary btn-block" style="margin-top: 20px;" onclick="detailWireless(\'${ipAddr}\');return false;">无线网络详情</button>\
             </div>\
         </form>\
     </div>';
@@ -329,7 +329,7 @@ var detailDialog = function (macAddr) {
         className: "my-detail",
         buttons: {
             cancel: {
-                label: "取消",
+                label: "关闭",
                 className: "btn-sm btn-danger",
                 callback: function () {
                 }
@@ -369,8 +369,6 @@ var detailNetwork = function (ipAddr) {
         bootbox.alert('远程调用失败！');
         return
     }
-
-    console.log(token);
 
     var data = JSON.stringify({
         url: 'http://' + ipAddr + '/cgi-bin/luci/rpc/uci?auth=' + token,
@@ -424,7 +422,7 @@ var detailNetwork = function (ipAddr) {
                     className: "my-detail",
                     buttons: {
                         cancel: {
-                            label: "取消",
+                            label: "关闭",
                             className: "btn-sm btn-danger",
                             callback: function () {
                             }
@@ -441,8 +439,97 @@ var detailWireless = function (ipAddr) {
     bootbox.hideAll();
     if (ipAddr == 'null') {
         bootbox.alert('获取无线网络信息失败！');
-        return false;
+        return
     }
+    var token = getToken(ipAddr);
+    if (!token) {
+        bootbox.alert('远程调用失败！');
+        return
+    }
+
+    var data = JSON.stringify({
+        url: 'http://' + ipAddr + '/cgi-bin/luci/rpc/uci?auth=' + token,
+        payload: JSON.stringify({method: "get_all", params: ["wireless"]})
+    });
+    $.ajax({
+        url: '/proxy',
+        type: 'POST',
+        async: false,
+        data: data,
+        success: function (jsonData) {
+            if (jsonData) {
+                var wireless = jsonData.result.radio0;
+                console.log("wireless: ", wireless);
+
+                var modalTemplate = '\
+                    <form class="form-horizontal">\
+                        <div class="control-group">\
+                            <label class="control-label">信道：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${channel}" />\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">国家：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${country}"/>\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">htmode：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${htmode}"/>\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">hwmode：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${hwmode}"/>\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">type：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${type}"/>\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">txpower：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${txpower}"/>\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">path：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${path}"/>\
+                            </div>\
+                        </div>\
+                    </form>';
+
+                bootbox.dialog({
+                    title: "无线网络详情",
+                    message: Template(modalTemplate, wireless),
+                    className: "my-detail",
+                    buttons: {
+                        edit: {
+                            label: "修改",
+                            className: "btn-sm btn-primary",
+                            callback: function () {
+                            }
+                        },
+                        cancel: {
+                            label: "关闭",
+                            className: "btn-sm btn-danger",
+                            callback: function () {
+                            }
+                        }
+                    }
+                })
+            }
+        }
+    });
+
 };
 
 
