@@ -476,33 +476,21 @@ var detailWireless = function (ipAddr) {
                             </div>\
                         </div>\
                         <div class="control-group">\
-                            <label class="control-label">htmode：</label>\
+                            <label class="control-label">HTMODE：</label>\
                             <div class="controls">\
                                 <input type="text" style="height: 30px" disabled value="${htmode}"/>\
                             </div>\
                         </div>\
                         <div class="control-group">\
-                            <label class="control-label">hwmode：</label>\
+                            <label class="control-label">硬件模式：</label>\
                             <div class="controls">\
                                 <input type="text" style="height: 30px" disabled value="${hwmode}"/>\
                             </div>\
                         </div>\
                         <div class="control-group">\
-                            <label class="control-label">type：</label>\
-                            <div class="controls">\
-                                <input type="text" style="height: 30px" disabled value="${type}"/>\
-                            </div>\
-                        </div>\
-                        <div class="control-group">\
-                            <label class="control-label">txpower：</label>\
+                            <label class="control-label">发射功率：</label>\
                             <div class="controls">\
                                 <input type="text" style="height: 30px" disabled value="${txpower}"/>\
-                            </div>\
-                        </div>\
-                        <div class="control-group">\
-                            <label class="control-label">path：</label>\
-                            <div class="controls">\
-                                <input type="text" style="height: 30px" disabled value="${path}"/>\
                             </div>\
                         </div>\
                     </form>';
@@ -529,9 +517,7 @@ var detailWireless = function (ipAddr) {
             }
         }
     });
-
 };
-
 
 var getNodeDetail = function (macAddr) {
     var resp = null;
