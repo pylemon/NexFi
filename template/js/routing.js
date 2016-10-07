@@ -235,25 +235,6 @@ var saveVisPosition = function () {
     )
 };
 
-// 绑定刷新按钮
-$('#vis-refresh').on('click', getVisJSON);
-$('#vis-save').on('click', saveVisPosition);
-
-// 初始化页面
-getVisJSON();
-
-paper.on('cell:pointerdblclick', function (cell) {
-    console.log("dblclick on cell id:", cell.model.id);
-    if (!cell.model.attributes.attrs.text) return;
-    var macAddr = cell.model.attributes.attrs.text.mac_addr;
-    var ipAddr = cell.model.attributes.attrs.text.text;
-    if (ipAddr.indexOf('.') == -1) {
-        ipAddr = null;
-    }
-    console.log("show dialog for: ", macAddr, ipAddr);
-    menuDialog(macAddr, ipAddr);
-});
-
 var menuDialog = function (macAddr, ipAddr) {
     var modalTemplate = '<div>\
         <form class="form-horizontal">\
@@ -433,7 +414,6 @@ var detailNetwork = function (ipAddr) {
         }
     });
 };
-
 
 var detailWireless = function (ipAddr) {
     bootbox.hideAll();
@@ -695,6 +675,65 @@ var getNodeDetail = function (macAddr) {
     return resp;
 };
 
+var initPage = function() {
+    getVisJSON();
+    $.get(
+        '/config',
+        function (jsonData) {
+            if (jsonData.title) {
+                $('#title').html(jsonData.title);
+            }
+        }
+    )
+};
+
+var globalConfigDialog = function () {
+    $.get(
+        '/config',
+        function (jsonData) {
+            var title = "";
+            if (jsonData.title) {
+                title = jsonData.title;
+            }
+            var modalTemplate = '\
+            <form class="form-horizontal">\
+                <div class="control-group">\
+                    <label class="control-label">公司名称：</label>\
+                    <div class="controls">\
+                        <input type="text" style="height: 30px" id="new_title" value="${title}" />\
+                    </div>\
+                </div>\
+            </form>';
+            bootbox.dialog({
+                title: "全局配置",
+                message: Template(modalTemplate, {title: title}),
+                className: "my-global-config",
+                buttons: {
+                    save: {
+                        label: "保存",
+                        className: "btn-sm btn-primary",
+                        callback: function () {
+                            $.post(
+                                '/config',
+                                JSON.stringify({title: $('#new_title').val()}),
+                                function () {
+                                    window.location.reload();
+                                }
+                            )
+                        }
+                    },
+                    cancel: {
+                        label: "关闭",
+                        className: "btn-sm btn-danger",
+                        callback: function () {
+                        }
+                    }
+                }
+            })
+        }
+    )
+};
+
 var Template = function (templateString, obj, recurse) {
     if (typeof recurse === "undefined") {
         recurse = 1;
@@ -711,6 +750,26 @@ var Template = function (templateString, obj, recurse) {
     return templateString;
 };
 
+// 绑定按钮事件
+$('#vis-refresh').on('click', getVisJSON);
+$('#vis-save').on('click', saveVisPosition);
+$('#global_config').on('click', globalConfigDialog);
 $('#logout').on('click', function () {
     window.location.replace('http://admin@'+ window.location.host + '/logout');
 });
+
+// 初始化页面
+initPage();
+
+paper.on('cell:pointerdblclick', function (cell) {
+    console.log("dblclick on cell id:", cell.model.id);
+    if (!cell.model.attributes.attrs.text) return;
+    var macAddr = cell.model.attributes.attrs.text.mac_addr;
+    var ipAddr = cell.model.attributes.attrs.text.text;
+    if (ipAddr.indexOf('.') == -1) {
+        ipAddr = null;
+    }
+    console.log("show dialog for: ", macAddr, ipAddr);
+    menuDialog(macAddr, ipAddr);
+});
+
