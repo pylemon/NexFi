@@ -245,27 +245,46 @@ getVisJSON();
 paper.on('cell:pointerdblclick', function (cell) {
     console.log("dblclick on cell id:", cell.model.id);
     if (!cell.model.attributes.attrs.text) return;
-    var macAddr = cell.model.attributes.attrs.text.text;
-
+    var macAddr = cell.model.attributes.attrs.text.mac_addr;
     console.log("show dialog for: ", macAddr);
-    // bootbox.alert(macAddr);
-    detailDialog(macAddr);
+    menuDialog(macAddr);
 });
 
+var menuDialog = function (macAddr) {
+    bootbox.dialog({
+        title: "菜单",
+        message: '<div>\
+<form class="form-horizontal">\
+    <div class="control-group">\
+            <button class="btn btn-large btn-success btn-block" style="margin-top: 20px;" onclick="detailDialog(\'' + macAddr + '\');return false;">查看节点详情</button>\
+            <button class="btn btn-large btn-warning btn-block" style="margin-top: 20px;" onclick="detailDialog(\'' + macAddr + '\');return false;">有线网络详情</button>\
+            <button class="btn btn-large btn-primary btn-block" style="margin-top: 20px;" onclick="detailDialog(\'' + macAddr + '\');return false;">无线参数配置</button>\
+    </div>\
+</form>\
+        </div>',
+        className: "my-menu",
+        buttons: {
+            cancel: {
+                label: "取消",
+                className: "btn-sm btn-danger",
+                callback: function () {
+                }
+            }
+        }
+    })
+};
+
 var detailDialog = function (macAddr) {
-    // todo: 获取数据
+    bootbox.hideAll();
+    var nodeDetail = getNodeDetail(macAddr);
+    console.log(nodeDetail);
+
+    var message = $('#detailModal').clone().show();
     bootbox.dialog({
         title: "查看详情",
-        message: $('#detailModal').clone().show(),
+        message: message,
         className: "my-detail",
         buttons: {
-            success: {
-                label: "编辑",
-                className: "btn-success",
-                callback: function () {
-                    editDialog(macAddr);
-                }
-            },
             cancel: {
                 label: "取消",
                 className: "btn-sm btn-danger",
@@ -276,31 +295,28 @@ var detailDialog = function (macAddr) {
     })
 };
 
-var editDialog = function (macAddr) {
-    bootbox.dialog({
-        title: "编辑",
-        message: $('#editModal').clone().show(),
-        className: "my-detail",
-        buttons: {
-            success: {
-                label: "保存",
-                className: "btn-success",
-                callback: function () {
-                    saveNodeInfo(macAddr);
-                }
-            },
-            cancel: {
-                label: "取消",
-                className: "btn-sm btn-danger",
-                callback: function () {
-                }
-            }
-        }
-    })
-};
-
-var saveNodeInfo = function (macAddr) {
-};
+// var editDialog = function (macAddr) {
+//     bootbox.dialog({
+//         title: "编辑",
+//         message: $('#editModal').clone().show(),
+//         className: "my-detail",
+//         buttons: {
+//             success: {
+//                 label: "保存",
+//                 className: "btn-success",
+//                 callback: function () {
+//                     saveNodeInfo(macAddr);
+//                 }
+//             },
+//             cancel: {
+//                 label: "取消",
+//                 className: "btn-sm btn-danger",
+//                 callback: function () {
+//                 }
+//             }
+//         }
+//     })
+// };
 
 var getNodeDetail = function (macAddr) {
     var resp = null;
@@ -316,3 +332,7 @@ var getNodeDetail = function (macAddr) {
     });
     return resp;
 };
+
+// curl -i -X POST -d '{"method":"login","params":["root", "root"]}' http://192.168.100.61/cgi-bin/luci/rpc/auth
+// curl -i -X POST -d '{"method":"get_all","params":["network"]}' "http://192.168.100.61/cgi-bin/luci/rpc/uci?auth=ef7577100457da419ee1cff6621e1dc1"
+// curl -i -X POST -d '{"method":"get_all","params":["wireless"]}' "http://192.168.100.61/cgi-bin/luci/rpc/uci?auth=ef7577100457da419ee1cff6621e1dc1"
