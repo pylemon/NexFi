@@ -42,7 +42,13 @@ var newNode = function (name, px, py) {
              return graph.getCell(allNodes[i].id)
         }
     }
-
+    var name_text, node_detail;
+    node_detail = getNodeDetail(name);
+    if (node_detail) {
+        name_text = node_detail.ipaddress;
+    } else {
+        name_text = name;
+    }
     var node = new joint.shapes.basic.Rect({
         position: { x: px, y: py },
         size: { width: 120, height: 40 },
@@ -60,7 +66,8 @@ var newNode = function (name, px, py) {
                 'stroke-width': 2
             },
             text: {
-                text: name,
+                mac_addr: name,
+                text: name_text,
                 fill: '#f2f2f2',
                 'font-size': 14,
                 'font-weight': 'lighter'
@@ -247,7 +254,6 @@ paper.on('cell:pointerdblclick', function (cell) {
 
 var detailDialog = function (macAddr) {
     // todo: 获取数据
-
     bootbox.dialog({
         title: "查看详情",
         message: $('#detailModal').clone().show(),
@@ -294,4 +300,19 @@ var editDialog = function (macAddr) {
 };
 
 var saveNodeInfo = function (macAddr) {
+};
+
+var getNodeDetail = function (macAddr) {
+    var resp = null;
+    $.ajax({
+        url: '/node?macAddr=' + macAddr,
+        type: "GET",
+        async: false,
+        success: function (jsonData) {
+            if (jsonData.no != "") {
+                resp = jsonData;
+            }
+        }
+    });
+    return resp;
 };
