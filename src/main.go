@@ -207,6 +207,7 @@ func initRouter() {
 	http.HandleFunc("/topo/position", auth.Wrap(topoPositionHandler))
 	http.HandleFunc("/node", auth.Wrap(nodeDetailHandler))
 	http.HandleFunc("/config", auth.Wrap(configHandler))
+	http.HandleFunc("/proxy", auth.Wrap(proxyHandler))
 }
 
 // 登陆验证 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -353,6 +354,34 @@ func nodeDetailHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(buf)
 	}
+}
+
+type ProxyReqData struct {
+	Url     string `json:"url"`
+	Payload string `json:"payload"`
+}
+
+func proxyHandler(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Println(err)
+			debug.PrintStack()
+		}
+	}()
+
+	logger.Println("POST /proxy proxyHandler")
+
+	var dt ProxyReqData
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&dt)
+	if err != nil || dt.Url == "" {
+		logger.Println("error decode proxy data:", err, dt)
+		return
+	}
+
+	result, err := PostByProxy(dt.Url, dt.Payload)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(result)
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
@@ -639,4 +668,14 @@ func System(s string, output *bytes.Buffer) {
 	if err != nil {
 		logger.Println("[System] command failed:", err)
 	}
+}
+
+func PostByProxy(urlAddr, payloadStr string) ([]byte, error) {
+	payload := strings.NewReader(payloadStr)
+	req, _ := http.NewRequest("POST", urlAddr, payload)
+	req.Header.Add("content-type", "application/json")
+	req.Header.Add("cache-control", "no-cache")
+	res, _ := http.DefaultClient.Do(req)
+	defer res.Body.Close()
+	return ioutil.ReadAll(res.Body)
 }

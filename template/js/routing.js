@@ -246,22 +246,28 @@ paper.on('cell:pointerdblclick', function (cell) {
     console.log("dblclick on cell id:", cell.model.id);
     if (!cell.model.attributes.attrs.text) return;
     var macAddr = cell.model.attributes.attrs.text.mac_addr;
-    console.log("show dialog for: ", macAddr);
-    menuDialog(macAddr);
+    var ipAddr = cell.model.attributes.attrs.text.text;
+    if (ipAddr.indexOf('.') == -1) {
+        ipAddr = null;
+    }
+    console.log("show dialog for: ", macAddr, ipAddr);
+    menuDialog(macAddr, ipAddr);
 });
 
-var menuDialog = function (macAddr) {
+var menuDialog = function (macAddr, ipAddr) {
+    var modalTemplate = '<div>\
+        <form class="form-horizontal">\
+            <div class="control-group">\
+                <button class="btn btn-large btn-success btn-block" style="margin-top: 20px;" onclick="detailDialog(\'${macAddr}\');return false;">查看节点详情</button>\
+                <button class="btn btn-large btn-warning btn-block" style="margin-top: 20px;" onclick="detailNetwork(\'${ipAddr}\');return false;">有线网络详情</button>\
+                <button class="btn btn-large btn-primary btn-block" style="margin-top: 20px;" onclick="detailWireless(\'${ipAddr}\');return false;">无线参数配置</button>\
+            </div>\
+        </form>\
+    </div>';
+
     bootbox.dialog({
         title: "菜单",
-        message: '<div>\
-<form class="form-horizontal">\
-    <div class="control-group">\
-            <button class="btn btn-large btn-success btn-block" style="margin-top: 20px;" onclick="detailDialog(\'' + macAddr + '\');return false;">查看节点详情</button>\
-            <button class="btn btn-large btn-warning btn-block" style="margin-top: 20px;" onclick="detailDialog(\'' + macAddr + '\');return false;">有线网络详情</button>\
-            <button class="btn btn-large btn-primary btn-block" style="margin-top: 20px;" onclick="detailDialog(\'' + macAddr + '\');return false;">无线参数配置</button>\
-    </div>\
-</form>\
-        </div>',
+        message: Template(modalTemplate, {macAddr: macAddr, ipAddr: ipAddr}),
         className: "my-menu",
         buttons: {
             cancel: {
@@ -332,28 +338,48 @@ var detailDialog = function (macAddr) {
     })
 };
 
-// var editDialog = function (macAddr) {
-//     bootbox.dialog({
-//         title: "编辑",
-//         message: $('#editModal').clone().show(),
-//         className: "my-detail",
-//         buttons: {
-//             success: {
-//                 label: "保存",
-//                 className: "btn-success",
-//                 callback: function () {
-//                     saveNodeInfo(macAddr);
-//                 }
-//             },
-//             cancel: {
-//                 label: "取消",
-//                 className: "btn-sm btn-danger",
-//                 callback: function () {
-//                 }
-//             }
-//         }
-//     })
-// };
+var getToken = function (ipAddr) {
+    var token = '';
+    var data = JSON.stringify({
+        url: 'http://' + ipAddr + '/cgi-bin/luci/rpc/auth',
+        payload: JSON.stringify({method: "login", params: ["root", "root"]})
+    });
+    $.ajax({
+        url: 'proxy',
+        type: 'POST',
+        async: false,
+        data: data,
+        success: function (jsonData) {
+            if (jsonData) {
+                token = jsonData.result;
+            }
+        }
+    });
+    return token;
+};
+
+var detailNetwork = function (ipAddr) {
+    bootbox.hideAll();
+    if (ipAddr == 'null') {
+        bootbox.alert('获取有线网络信息失败！');
+    }
+    var token = getToken(ipAddr);
+
+    console.log(token);
+
+    // curl -i -X POST -d '{"method":"get_all","params":["network"]}' "http://192.168.100.61/cgi-bin/luci/rpc/uci?auth=ef7577100457da419ee1cff6621e1dc1"
+
+};
+
+
+var detailWireless = function (ipAddr) {
+    bootbox.hideAll();
+    if (ipAddr == 'null') {
+        bootbox.alert('获取无线网络信息失败！');
+        return false;
+    }
+};
+
 
 var getNodeDetail = function (macAddr) {
     var resp = null;
