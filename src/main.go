@@ -337,10 +337,7 @@ func nodeDetailHandler(w http.ResponseWriter, r *http.Request) {
 		var resp NexFiData
 		queryForm, err := url.ParseQuery(r.URL.RawQuery)
 		if err == nil && len(queryForm["macAddr"]) > 0 {
-			macAddr := queryForm["macAddr"][0]
-
-			//logger.Println("GET params: ", macAddr)
-
+			macAddr := strings.ToUpper(queryForm["macAddr"][0])
 			for _, ip := range IpInfoData.NexFi {
 				if macAddr == ip.Adhoc0 {
 					resp = ip
