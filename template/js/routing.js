@@ -564,7 +564,3 @@ var Template = function (templateString, obj, recurse) {
     }
     return templateString;
 };
-
-// curl -i -X POST -d '{"method":"login","params":["root", "root"]}' http://192.168.100.61/cgi-bin/luci/rpc/auth
-// curl -i -X POST -d '{"method":"get_all","params":["network"]}' "http://192.168.100.61/cgi-bin/luci/rpc/uci?auth=ef7577100457da419ee1cff6621e1dc1"
-// curl -i -X POST -d '{"method":"get_all","params":["wireless"]}' "http://192.168.100.61/cgi-bin/luci/rpc/uci?auth=ef7577100457da419ee1cff6621e1dc1"
