@@ -21,6 +21,7 @@ import (
 	"errors"
 	"os/exec"
 	"html/template"
+	"net/url"
 )
 
 // 全局配置结构
@@ -181,6 +182,7 @@ func initRouter() {
 	http.HandleFunc("/", auth.Wrap(homeHandler))
 	http.HandleFunc("/topo/vis", auth.Wrap(topoVisHandler))
 	http.HandleFunc("/topo/position", auth.Wrap(topoPositionHandler))
+	http.HandleFunc("/node", auth.Wrap(nodeDetailHandler))
 }
 
 // 登陆验证 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -265,21 +267,22 @@ type Node struct {
 	Position Position `json:"position"`
 }
 
-type VisPosition struct {
+type VisPositionData struct {
 	Nodes []Node `json:"nodes"`
+}
+
+type ConfigData struct {
+	Title string `json:"title"`
 }
 
 type Response struct {
 	Status string `json:"status"`
 }
 
-func getDatabase(name string) *DB {
+func getDatabase(name string, objPrototypeGenerator func() interface{}) *DB {
 	db := NewDB(
-		"ts",
-		func() interface{} {
-			var vis VisPosition
-			return &vis
-		})
+		name,
+		objPrototypeGenerator)
 	db.Init()
 	return db
 }
@@ -291,32 +294,38 @@ func topoPositionHandler(w http.ResponseWriter, r *http.Request) {
 			debug.PrintStack()
 		}
 	}()
+	db := getDatabase(
+		"topo",
+		func() interface{} {
+			var vis VisPositionData
+			return &vis
+		})
 
 	if r.Method == "POST" {
 		logger.Println("POST /topo/position topoPositionHandler")
-		var dt VisPosition
+		var dt VisPositionData
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&dt)
 		if err != nil {
 			logger.Println(err)
 		}
-		db := getDatabase("position")
 		db.Update("position", dt)
+
+		logger.Println("save position to db:", dt)
 
 		resp := Response{"ok"}
 		buf, err := json.Marshal(resp)
-		if err != nil {
-			http.Error(w, "Marshal JSON failed", 500)
-			return
-		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(buf)
 	} else {
 		logger.Println("GET /topo/position topoPositionHandler")
-		db := getDatabase("position")
-		value := db.Get("position")
 
-		logger.Println("value:", value)
+		value := db.Get("position")
+		if value == nil {
+			value = VisPositionData{}
+		}
+
+		logger.Println("position from db:", value)
 
 		buf, err := json.Marshal(value)
 		if err != nil {

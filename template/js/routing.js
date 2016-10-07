@@ -140,6 +140,7 @@ var newRoute = function(node1, node2, label) {
 
 // 找mac对应的存储下来的position
 var getSavedPosition = function (macAddr, posData) {
+    if (posData.nodes == null) return null;
     for (var i = 0; i < posData.nodes.length; i++) {
         var name = posData.nodes[i].name;
         var pos = posData.nodes[i].position;
@@ -276,10 +277,10 @@ var editDialog = function (macAddr) {
         className: "my-detail",
         buttons: {
             success: {
-                label: "编辑",
+                label: "保存",
                 className: "btn-success",
                 callback: function () {
-                    editDialog(macAddr);
+                    saveNodeInfo(macAddr);
                 }
             },
             cancel: {
@@ -290,4 +291,7 @@ var editDialog = function (macAddr) {
             }
         }
     })
+};
+
+var saveNodeInfo = function (macAddr) {
 };
