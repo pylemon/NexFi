@@ -33,8 +33,9 @@ type GlobalConfig struct {
 	Username      string `json:"username"`
 	Password      string `json:"password"`
 	VisCommand    string `json:"vis_command"`
+	IpInfoFile    string `json:"ip_info_file"`
 
-	Lock *sync.Mutex
+	Lock          *sync.Mutex
 }
 
 // 全局变量
@@ -51,7 +52,8 @@ var (
 	VisCommand    = flag.String("vis_command", "batadv-vis -f jsondoc", "command to generate vis output, default: batadv-vis -f jsondoc")
 	Username      = flag.String("username", "admin", "login username, default: admin")
 	Password      = flag.String("password", "admin", "login password, default: admin")
-
+	IpInfoFile = flag.String("ip_info_file", "", "ip info file, default: ip_info.json")
+	IpInfoData IpInfo
 	Config GlobalConfig
 )
 
@@ -65,6 +67,9 @@ func init() {
 
 	if *LogFile == "" {
 		*LogFile = "./server.log"
+	}
+	if *IpInfoFile == "" {
+		*IpInfoFile = "./ip_info.json"
 	}
 	if *ListenAddress == "" {
 		*ListenAddress = "0.0.0.0:8888"
@@ -81,6 +86,7 @@ func init() {
 
 	if !FileExists(*ConfigFile) {
 		Config.LogFile = *LogFile
+		Config.IpInfoFile = *IpInfoFile
 		Config.ListenAddress = *ListenAddress
 		Config.LogToStdout = *LogToStdout
 		Config.Username = *Username
@@ -110,6 +116,23 @@ func init() {
 		log_file = os.Stdout
 	}
 	logger = log.New(log_file, "", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// 初始化ip关联配置
+	if !FileExists(Config.IpInfoFile) {
+		IpInfoData = IpInfo{}
+	} else {
+		data, err := ioutil.ReadFile(Config.IpInfoFile)
+		if err != nil {
+			log.Println(err)
+			IpInfoData = IpInfo{}
+		}
+		err = json.Unmarshal(data, &IpInfoData)
+		if err != nil {
+			log.Println(err)
+			IpInfoData = IpInfo{}
+		}
+		log.Printf("Load ip info from file: %s", data)
+	}
 }
 
 // 信号回调
@@ -232,31 +255,17 @@ func NewBasicAuth(username, password string) *BasicAuth {
 
 // 路由模块 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 渲染首页模板
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Println("GET / homeHandler")
-	t, err := template.ParseFiles("template/html/topo.html")
-	if err != nil {
-		logger.Println(err)
-	}
-	t.Execute(w, nil)
+
+type IpInfo struct {
+	NexFi []NexFiData `json:"nexfi"`
 }
 
-// 获取拓扑结构的JSON数据
-func topoVisHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Println("GET /topo/vis topoVisHandler")
-	defer func() {
-		if err := recover(); err != nil {
-			logger.Println(err)
-			debug.PrintStack()
-		}
-	}()
-
-	var out bytes.Buffer
-	//logger.Println("[vis] cmd:", Config.VisCommand)
-	System(Config.VisCommand, &out)
-	//logger.Println("[vis] response:", out.String())
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(out.Bytes())
+type NexFiData struct {
+	Adhoc0    string `json:"adhoc0"`
+	Brlan     string `json:"br-lan"`
+	Eth1      string `json:"eth1"`
+	Ipaddress string `json:"ipaddress"`
+	No        string `json:"no"`
 }
 
 type Position struct {
@@ -288,6 +297,32 @@ func getDatabase(name string, objPrototypeGenerator func() interface{}) *DB {
 	return db
 }
 
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Println("GET / homeHandler")
+	t, err := template.ParseFiles("template/html/topo.html")
+	if err != nil {
+		logger.Println(err)
+	}
+	t.Execute(w, nil)
+}
+
+// 获取拓扑结构的JSON数据
+func topoVisHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Println("GET /topo/vis topoVisHandler")
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Println(err)
+			debug.PrintStack()
+		}
+	}()
+
+	var out bytes.Buffer
+	//logger.Println("[vis] cmd:", Config.VisCommand)
+	System(Config.VisCommand, &out)
+	//logger.Println("[vis] response:", out.String())
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out.Bytes())
+}
 
 func nodeDetailHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
@@ -298,12 +333,28 @@ func nodeDetailHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 	if r.Method == "GET" {
 		logger.Println("GET /node nodeDetailHandler")
+
+		var resp NexFiData
 		queryForm, err := url.ParseQuery(r.URL.RawQuery)
 		if err == nil && len(queryForm["macAddr"]) > 0 {
-			macAddr := queryForm["macAddr"]
+			macAddr := queryForm["macAddr"][0]
 
-			logger.Println("GET params: ", macAddr)
+			//logger.Println("GET params: ", macAddr)
+
+			for _, ip := range IpInfoData.NexFi {
+				if macAddr == ip.Adhoc0 {
+					resp = ip
+					break
+				}
+			}
 		}
+		buf, err := json.Marshal(resp)
+		if err != nil {
+			http.Error(w, "Marshal JSON failed", 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(buf)
 	}
 }
 

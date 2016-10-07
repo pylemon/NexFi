@@ -4,5 +4,6 @@
     "username": "admin",
     "password": "admin",
     "vis_command": "PATH=/home/liwei/tools fake-vis -f jsondoc",
+    "ip_info_file": "./ip_info.json",
     "log_to_stdout": true
 }
