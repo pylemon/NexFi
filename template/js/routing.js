@@ -278,11 +278,48 @@ var detailDialog = function (macAddr) {
     bootbox.hideAll();
     var nodeDetail = getNodeDetail(macAddr);
     console.log(nodeDetail);
+    if (!nodeDetail) {
+        bootbox.alert('获取节点详情失败！');
+        return
+    }
 
-    var message = $('#detailModal').clone().show();
+    var modalTemplate = '\
+    <form class="form-horizontal">\
+        <div class="control-group">\
+            <label class="control-label">设备编号：</label>\
+            <div class="controls">\
+                <input type="text" style="height: 30px" disabled value="${no}" />\
+            </div>\
+        </div>\
+        <div class="control-group">\
+            <label class="control-label">IP地址：</label>\
+            <div class="controls">\
+                <input type="text" style="height: 30px" disabled value="${ipaddress}" />\
+            </div>\
+        </div>\
+        <div class="control-group">\
+            <label class="control-label">adhoc0：</label>\
+            <div class="controls">\
+                <input type="text" style="height: 30px" disabled value="${adhoc0}"/>\
+            </div>\
+        </div>\
+        <div class="control-group">\
+            <label class="control-label">br-lan：</label>\
+            <div class="controls">\
+                <input type="text" style="height: 30px" disabled value="${br-lan}"/>\
+            </div>\
+        </div>\
+        <div class="control-group">\
+            <label class="control-label">eth1：</label>\
+            <div class="controls">\
+                <input type="text" style="height: 30px" disabled value="${eth1}"/>\
+            </div>\
+        </div>\
+    </form>';
+
     bootbox.dialog({
         title: "查看详情",
-        message: message,
+        message: Template(modalTemplate, nodeDetail),
         className: "my-detail",
         buttons: {
             cancel: {
@@ -331,6 +368,23 @@ var getNodeDetail = function (macAddr) {
         }
     });
     return resp;
+};
+
+
+var Template = function (templateString, obj, recurse) {
+    if (typeof recurse === "undefined") {
+        recurse = 1;
+    }
+    $.each(obj, function (k, v) {
+        if (typeof v === "function") {
+            v = v(obj);
+        }
+        templateString = templateString.split("${" + k + "}").join(v);
+    });
+    if (templateString.indexOf("${") > -1 && recurse < 5) {
+        return Template(templateString, obj, recurse);
+    }
+    return templateString;
 };
 
 // curl -i -X POST -d '{"method":"login","params":["root", "root"]}' http://192.168.100.61/cgi-bin/luci/rpc/auth

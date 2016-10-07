@@ -2,6 +2,18 @@
 <head>
     <link rel="stylesheet" type="text/css" href="../css/joint.css" />
     <link rel="stylesheet" type="text/css" href="../css/bootstrap-combined.min.css"/>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            width: 100%;
+            min-height: 800px;
+            background-size: 100%;
+            position: absolute;
+        }
+    </style>
 </head>
 
 <body>
@@ -50,41 +62,6 @@
             </div>
         </div>
     </div>
-</div>
-
-
-<div class="hide" id="detailModal">
-    <form class="form-horizontal">
-        <div class="control-group">
-            <label class="control-label" for="detail_ip">IP地址：</label>
-            <div class="controls">
-                <input style="height: 30px" id="detail_ip" disabled/>
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="detail_mac">Mac地址：</label>
-            <div class="controls">
-                <input style="height: 30px" id="detail_mac" disabled/>
-            </div>
-        </div>
-    </form>
-</div>
-
-<div class="hide" id="editModal">
-    <form class="form-horizontal">
-        <div class="control-group">
-            <label class="control-label" for="edit_ip">IP地址：</label>
-            <div class="controls">
-                <input style="height: 30px" id="edit_ip" />
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="edit_mac">Mac地址：</label>
-            <div class="controls">
-                <input style="height: 30px" id="edit_mac" />
-            </div>
-        </div>
-    </form>
 </div>
 
 <script src="../js/jquery.min.js"></script>
