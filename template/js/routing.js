@@ -682,6 +682,8 @@ var initPage = function() {
         function (jsonData) {
             if (jsonData.title) {
                 $('#title').html(jsonData.title);
+            } else {
+                $('#title').html('NexFi');
             }
         }
     )
