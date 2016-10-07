@@ -183,6 +183,7 @@ func initRouter() {
 	http.HandleFunc("/topo/vis", auth.Wrap(topoVisHandler))
 	http.HandleFunc("/topo/position", auth.Wrap(topoPositionHandler))
 	http.HandleFunc("/node", auth.Wrap(nodeDetailHandler))
+	http.HandleFunc("/config", auth.Wrap(configHandler))
 }
 
 // 登陆验证 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -285,6 +286,70 @@ func getDatabase(name string, objPrototypeGenerator func() interface{}) *DB {
 		objPrototypeGenerator)
 	db.Init()
 	return db
+}
+
+
+func nodeDetailHandler(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Println(err)
+			debug.PrintStack()
+		}
+	}()
+	if r.Method == "GET" {
+		logger.Println("GET /node nodeDetailHandler")
+		queryForm, err := url.ParseQuery(r.URL.RawQuery)
+		if err == nil && len(queryForm["macAddr"]) > 0 {
+			macAddr := queryForm["macAddr"]
+
+			logger.Println("GET params: ", macAddr)
+		}
+	}
+}
+
+func configHandler(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Println(err)
+			debug.PrintStack()
+		}
+	}()
+	db := getDatabase(
+		"config",
+		func() interface{} {
+			var dt ConfigData
+			return &dt
+		})
+
+	if r.Method == "GET" {
+		logger.Println("GET /config configHandler")
+
+		db.Get("title")
+		value := db.Get("title")
+
+		buf, err := json.Marshal(value)
+		if err != nil {
+			http.Error(w, "Marshal JSON failed", 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(buf)
+	} else {
+		logger.Println("POST /config configHandler")
+		var dt ConfigData
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&dt)
+		if err != nil {
+			logger.Println(err)
+		}
+
+		db.Update("title", dt)
+
+		resp := Response{"ok"}
+		buf, _ := json.Marshal(resp)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(buf)
+	}
 }
 
 func topoPositionHandler(w http.ResponseWriter, r *http.Request) {
