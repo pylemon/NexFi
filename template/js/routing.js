@@ -345,7 +345,7 @@ var getToken = function (ipAddr) {
         payload: JSON.stringify({method: "login", params: ["root", "root"]})
     });
     $.ajax({
-        url: 'proxy',
+        url: '/proxy',
         type: 'POST',
         async: false,
         data: data,
@@ -362,13 +362,78 @@ var detailNetwork = function (ipAddr) {
     bootbox.hideAll();
     if (ipAddr == 'null') {
         bootbox.alert('获取有线网络信息失败！');
+        return
     }
     var token = getToken(ipAddr);
+    if (!token) {
+        bootbox.alert('远程调用失败！');
+        return
+    }
 
     console.log(token);
 
-    // curl -i -X POST -d '{"method":"get_all","params":["network"]}' "http://192.168.100.61/cgi-bin/luci/rpc/uci?auth=ef7577100457da419ee1cff6621e1dc1"
-
+    var data = JSON.stringify({
+        url: 'http://' + ipAddr + '/cgi-bin/luci/rpc/uci?auth=' + token,
+        payload: JSON.stringify({method: "get_all", params: ["network"]})
+    });
+    $.ajax({
+        url: '/proxy',
+        type: 'POST',
+        async: false,
+        data: data,
+        success: function (jsonData) {
+            if (jsonData) {
+                var lan = jsonData.result.lan;
+                console.log("network: ", lan);
+                var modalTemplate = '\
+                    <form class="form-horizontal">\
+                        <div class="control-group">\
+                            <label class="control-label">IP地址：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${ipaddr}" />\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">子网掩码：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${netmask}"/>\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">网络类型：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${type}"/>\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">端口名称：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${ifname}"/>\
+                            </div>\
+                        </div>\
+                        <div class="control-group">\
+                            <label class="control-label">协议：</label>\
+                            <div class="controls">\
+                                <input type="text" style="height: 30px" disabled value="${proto}"/>\
+                            </div>\
+                        </div>\
+                    </form>';
+                bootbox.dialog({
+                    title: "有线网络详情",
+                    message: Template(modalTemplate, lan),
+                    className: "my-detail",
+                    buttons: {
+                        cancel: {
+                            label: "取消",
+                            className: "btn-sm btn-danger",
+                            callback: function () {
+                            }
+                        }
+                    }
+                })
+            }
+        }
+    });
 };
 
 
