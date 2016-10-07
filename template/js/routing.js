@@ -695,7 +695,6 @@ var getNodeDetail = function (macAddr) {
     return resp;
 };
 
-
 var Template = function (templateString, obj, recurse) {
     if (typeof recurse === "undefined") {
         recurse = 1;
@@ -711,3 +710,7 @@ var Template = function (templateString, obj, recurse) {
     }
     return templateString;
 };
+
+$('#logout').on('click', function () {
+    window.location.replace('http://admin@'+ window.location.host + '/logout');
+});
