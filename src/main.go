@@ -676,6 +676,7 @@ func PostByProxy(urlAddr, payloadStr string) ([]byte, error) {
 	req.Header.Add("content-type", "application/json")
 	req.Header.Add("cache-control", "no-cache")
 	res, _ := http.DefaultClient.Do(req)
+	defer req.Body.Close()
 	defer res.Body.Close()
 	return ioutil.ReadAll(res.Body)
 }
