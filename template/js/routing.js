@@ -470,9 +470,9 @@ var detailWireless = function (ipAddr) {
                             </div>\
                         </div>\
                         <div class="control-group">\
-                            <label class="control-label">国家：</label>\
+                            <label class="control-label">发射功率：</label>\
                             <div class="controls">\
-                                <input type="text" style="height: 30px" disabled value="${country}"/>\
+                                <input type="text" style="height: 30px" disabled value="${txpower}"/>\
                             </div>\
                         </div>\
                         <div class="control-group">\
@@ -488,9 +488,9 @@ var detailWireless = function (ipAddr) {
                             </div>\
                         </div>\
                         <div class="control-group">\
-                            <label class="control-label">发射功率：</label>\
+                            <label class="control-label">国家：</label>\
                             <div class="controls">\
-                                <input type="text" style="height: 30px" disabled value="${txpower}"/>\
+                                <input type="text" style="height: 30px" disabled value="${country}"/>\
                             </div>\
                         </div>\
                     </form>';
@@ -504,6 +504,7 @@ var detailWireless = function (ipAddr) {
                             label: "修改",
                             className: "btn-sm btn-primary",
                             callback: function () {
+                                editWireless(ipAddr, wireless, token);
                             }
                         },
                         cancel: {
@@ -517,6 +518,166 @@ var detailWireless = function (ipAddr) {
             }
         }
     });
+};
+
+var editWireless = function (ipAddr, wireless, token) {
+    bootbox.hideAll();
+
+    var modalTemplate = '\
+        <form class="form-horizontal">\
+            <div class="control-group">\
+                <label class="control-label">信道：</label>\
+                <div class="controls">\
+                    <input type="text" style="height: 30px" id="channel" value="${channel}" />\
+                </div>\
+            </div>\
+            <div class="control-group">\
+                <label class="control-label">发射功率：</label>\
+                <div class="controls">\
+                    <input type="text" style="height: 30px" id="txpower" value="${txpower}"/>\
+                </div>\
+            </div>\
+            <div class="control-group">\
+                <label class="control-label">HTMODE：</label>\
+                <div class="controls">\
+                    <input type="text" style="height: 30px" id="htmode" value="${htmode}"/>\
+                </div>\
+            </div>\
+            <div class="control-group">\
+                <label class="control-label">硬件模式：</label>\
+                <div class="controls">\
+                    <input type="text" style="height: 30px" disabled value="${hwmode}"/>\
+                </div>\
+            </div>\
+            <div class="control-group">\
+                <label class="control-label">国家：</label>\
+                <div class="controls">\
+                    <input type="text" style="height: 30px" disabled value="${country}"/>\
+                </div>\
+            </div>\
+        </form>';
+
+    bootbox.dialog({
+        title: "无线网络编辑",
+        message: Template(modalTemplate, wireless),
+        className: "my-detail",
+        buttons: {
+            edit: {
+                label: "保存",
+                className: "btn-sm btn-primary",
+                callback: function () {
+                    var channel = $('#channel').val();
+                    var htmode = $('#htmode').val();
+                    var txpower = $('#txpower').val();
+                    if (channel == '' || wireless.channel == channel) {
+                        channel = ''
+                    }
+                    if (htmode == '' || wireless.htmode == htmode) {
+                        htmode = ''
+                    }
+                    if (txpower == '' || wireless.txpower == txpower) {
+                        txpower = ''
+                    }
+                    saveWirelessChanges(ipAddr, token, channel, htmode, txpower);
+                }
+            },
+            cancel: {
+                label: "关闭",
+                className: "btn-sm btn-danger",
+                callback: function () {
+                }
+            }
+        }
+    })
+};
+
+var saveWirelessChanges = function (ipAddr, token, channel, htmode, txpower) {
+    console.log('about to save changes:', channel, htmode, txpower);
+    var url = 'http://' + ipAddr + '/cgi-bin/luci/rpc/uci?auth=' + token;
+    var flag = true;
+    if (channel != '') {
+        var channel_data = JSON.stringify({
+            url: url,
+            payload: JSON.stringify({method: "set", params: ["wireless.radio0.channel=" + channel]})
+        });
+        $.ajax({
+            url: '/proxy',
+            type: 'POST',
+            async: false,
+            data: channel_data,
+            success: function (jsonData) {
+                flag = Boolean(jsonData.result);
+            }
+        })
+    }
+
+    if (htmode != '') {
+        var htmode_data = JSON.stringify({
+            url: url,
+            payload: JSON.stringify({method: "set", params: ["wireless.radio0.htmode=" + htmode]})
+        });
+        $.ajax({
+            url: '/proxy',
+            type: 'POST',
+            async: false,
+            data: htmode_data,
+            success: function (jsonData) {
+                flag = Boolean(jsonData.result);
+            }
+        })
+    }
+    if (txpower != '') {
+        var txpower_data = JSON.stringify({
+            url: url,
+            payload: JSON.stringify({method: "set", params: ["wireless.radio0.txpower=" + txpower]})
+        });
+        $.ajax({
+            url: '/proxy',
+            type: 'POST',
+            async: false,
+            data: txpower_data,
+            success: function (jsonData) {
+                flag = Boolean(jsonData.result);
+            }
+        })
+    }
+    if (flag) {
+        if (channel || htmode || txpower) {
+            var commit_data = JSON.stringify({
+                url: url,
+                payload: JSON.stringify({method: "commit", params: ["wireless"]})
+            });
+            $.ajax({
+                url: '/proxy',
+                type: 'POST',
+                async: false,
+                data: commit_data,
+                success: function (jsonData) {
+                    if (jsonData.result) {
+                        bootbox.alert("保存成功！")
+                    } else {
+                        bootbox.alert("保存失败请重试！")
+                    }
+                }
+            })
+        } else {
+            bootbox.alert("保存成功！")
+        }
+    } else {
+        var revert_data = JSON.stringify({
+            url: url,
+            payload: JSON.stringify({method: "revert", params: ["wireless"]})
+        });
+        $.ajax({
+            url: '/proxy',
+            type: 'POST',
+            async: false,
+            data: revert_data,
+            success: function (jsonData) {
+            }
+        });
+        bootbox.alert("保存失败请重试！")
+    }
 };
 
 var getNodeDetail = function (macAddr) {
