@@ -326,7 +326,9 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 
 		db.Get("title")
 		value := db.Get("title")
-
+		if value == nil {
+			value = ConfigData{}
+		}
 		buf, err := json.Marshal(value)
 		if err != nil {
 			http.Error(w, "Marshal JSON failed", 500)
