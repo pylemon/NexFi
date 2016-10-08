@@ -40,3 +40,9 @@ You may modify `config.json` and `ip_info.json` files on your needs.
 * ip_info.json
 
     This file is the basic network config of the whole network.
+
+You may need to tweak some sysctl in order to make sys.exec not running into problem.
+
+refs: 
+http://stackoverflow.com/questions/35025338/cannot-allocate-memory-error
+
