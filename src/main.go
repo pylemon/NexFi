@@ -148,6 +148,18 @@ func signalCallback() {
 	}
 }
 
+func GC() {
+	for {
+		time.Sleep(time.Duration(30) * time.Second)
+		logger.Println("Start garbage collection...")
+		runtime.GC()
+		logger.Println("End garbage collection...")
+
+		logger.Println("Free Memory to OS...")
+		debug.FreeOSMemory()
+	}
+}
+
 func main() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -155,7 +167,7 @@ func main() {
 			debug.PrintStack()
 		}
 	}()
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	runtime.GOMAXPROCS(1)
 	// HOLD住POSIX SIGNAL
 	signal_chan = make(chan os.Signal, 10)
 	signal.Notify(signal_chan,
@@ -182,6 +194,7 @@ func main() {
 		syscall.SIGUSR2)
 
 	go signalCallback()
+	go GC()
 
 	initRouter()
 	s := &http.Server{
